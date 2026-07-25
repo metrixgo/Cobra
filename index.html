@@ -9,23 +9,23 @@
   <body>
     <header class="topbar">
       <div class="brand"><span class="brand-mark">C</span><span>Cobra</span><small>Block Python</small></div>
-      <div class="actions"><button id="runButton" class="button primary">Run</button><button id="exportButton" class="button">Export .py</button><button id="clearButton" class="button quiet">Clear</button></div>
+      <div class="actions"><span id="collaborationStatus" class="collaboration-status">Private workspace</span><button id="copyLinkButton" class="button" title="Copy a link to this shared workspace">Copy share link</button><button id="runButton" class="button primary">Run</button><button id="exportButton" class="button">Export .py</button><button id="clearButton" class="button quiet">Clear</button></div>
     </header>
     <main class="app-shell">
       <section class="editor-panel">
-        <div class="panel-heading"><span>Blocks</span><span class="hint">Drag a block into the canvas</span></div>
+        <div class="panel-heading"><span>Blocks</span></div>
         <div class="builder">
           <aside class="palette" aria-label="Block palette">
-            <p class="palette-label">ACTIONS</p>
-            <div class="palette-block print" draggable="true" data-new="print">print text</div>
-            <div class="palette-block ask" draggable="true" data-new="ask">ask for input</div>
-            <div class="palette-block note" draggable="true" data-new="comment">comment</div>
-            <p class="palette-label">LOGIC</p>
-            <div class="palette-block loop" draggable="true" data-new="count">count from to</div>
-            <div class="palette-block logic" draggable="true" data-new="if">if condition</div>
-            <p class="palette-label">VARIABLES</p>
-            <div class="palette-block variable" draggable="true" data-new="set">set variable</div>
-            <div class="palette-block variable" draggable="true" data-new="change">change variable</div>
+            <nav class="category-jumps" aria-label="Jump to block category">
+              <button class="category-jump actions-jump" data-target="actions">Actions</button>
+              <button class="category-jump logic-jump" data-target="logic">Logic</button>
+              <button class="category-jump variables-jump" data-target="variables">Variables</button>
+              <button class="category-jump other-jump" data-target="other">Other</button>
+            </nav>
+            <section id="actions" class="palette-group"><p class="palette-label">ACTIONS</p><div class="palette-block print" draggable="true" data-new="print_text">print text</div><div class="palette-block print" draggable="true" data-new="print_variable">print variable</div><div class="palette-block ask" draggable="true" data-new="ask">ask for input</div></section>
+            <section id="logic" class="palette-group"><p class="palette-label">LOGIC</p><div class="palette-block loop" draggable="true" data-new="count">count from to</div><div class="palette-block logic" draggable="true" data-new="if">if condition</div><div class="palette-block logic" draggable="true" data-new="if_else">if else</div></section>
+            <section id="variables" class="palette-group"><p class="palette-label">VARIABLES</p><div class="palette-block variable" draggable="true" data-new="set">set variable</div><div class="palette-block variable" draggable="true" data-new="change">change variable</div></section>
+            <section id="other" class="palette-group"><p class="palette-label">OTHER</p><div class="palette-block other" draggable="true" data-new="comment">comment</div></section>
           </aside>
           <div id="canvas" class="canvas" aria-label="Program canvas"><div class="stack root-stack" data-stack="root"></div></div>
         </div>
@@ -36,6 +36,10 @@
         <section class="output-panel"><div class="output-heading">Output <button id="clearOutput">Clear</button></div><pre id="programOutput">Run your blocks to see output here.</pre></section>
       </aside>
     </main>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+    <script src="firebase-config.js"></script>
+    <script src="collaboration.js"></script>
     <script src="app.js"></script>
   </body>
 </html>

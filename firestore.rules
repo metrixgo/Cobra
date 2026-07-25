@@ -1,0 +1,9 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Basic public collaboration: anyone holding a room link can edit it.
+    match /cobraRooms/{roomId} {
+      allow read, write: if true;
+    }
+  }
+}
