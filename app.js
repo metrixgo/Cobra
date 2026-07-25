@@ -1,97 +1,40 @@
-/* Cobra: Blockly workspace + custom block definitions + Python generators. */
-const python = Blockly.Python;
+const canvas = document.getElementById('canvas');
 const codeEl = document.getElementById('pythonCode');
 const outputEl = document.getElementById('programOutput');
+let dragged = null;
 
-Blockly.defineBlocksWithJsonArray([
-  { type: 'cobra_print', message0: 'print %1', args0: [{ type: 'input_value', name: 'VALUE' }], previousStatement: null, nextStatement: null, colour: 160, tooltip: 'Display a value' },
-  { type: 'cobra_range_loop', message0: 'count %1 from %2 to %3', args0: [{ type: 'field_input', name: 'VAR', text: 'i' }, { type: 'input_value', name: 'FROM', check: 'Number' }, { type: 'input_value', name: 'TO', check: 'Number' }], message1: 'do %1', args1: [{ type: 'input_statement', name: 'DO' }], previousStatement: null, nextStatement: null, colour: 230, tooltip: 'Repeat blocks for every number in the range' },
-  { type: 'cobra_assign', message0: 'set %1 to %2', args0: [{ type: 'field_input', name: 'NAME', text: 'score' }, { type: 'input_value', name: 'VALUE' }], previousStatement: null, nextStatement: null, colour: 330, tooltip: 'Create or update a Python variable' },
-  { type: 'cobra_input', message0: 'ask %1', args0: [{ type: 'field_input', name: 'PROMPT', text: 'What is your name?' }], output: 'String', colour: 65, tooltip: 'Ask the user for text' },
-  { type: 'cobra_comment', message0: 'comment %1', args0: [{ type: 'field_input', name: 'TEXT', text: 'Describe this step' }], previousStatement: null, nextStatement: null, colour: 20, tooltip: 'Add a Python comment' }
-]);
-
-const safeName = (name) => {
-  const cleaned = String(name || 'value').trim().replace(/\W/g, '_').replace(/^\d/, '_');
-  return cleaned || 'value';
+const field = (name, value, extra = '') => `<input class="field ${extra}" data-field="${name}" value="${value}" spellcheck="false">`;
+const remove = () => '<button class="delete-block" title="Remove block" aria-label="Remove block">×</button>';
+const innerStack = () => '<div class="nested-wrap"><div class="nested-title">DO</div><div class="stack nested-stack"></div></div>';
+const templates = {
+  print: () => `<div class="block print" draggable="true" data-type="print"><div class="block-head"><span class="block-label">print</span>${field('text','Hello, Cobra!','wide')}${remove()}</div></div>`,
+  ask: () => `<div class="block ask" draggable="true" data-type="ask"><div class="block-head"><span class="block-label">ask</span>${field('name','answer')}${field('prompt','Your answer?','wide')}${remove()}</div></div>`,
+  comment: () => `<div class="block note" draggable="true" data-type="comment"><div class="block-head"><span class="block-label">comment</span>${field('text','explain this step','wide')}${remove()}</div></div>`,
+  set: () => `<div class="block variable" draggable="true" data-type="set"><div class="block-head"><span class="block-label">set</span>${field('name','score')}${field('value','0')}${remove()}</div></div>`,
+  change: () => `<div class="block variable" draggable="true" data-type="change"><div class="block-head"><span class="block-label">change</span>${field('name','score')}<span class="block-label">by</span>${field('value','1','tiny')}${remove()}</div></div>`,
+  count: () => `<div class="block loop" draggable="true" data-type="count"><div class="block-head"><span class="block-label">count</span>${field('name','i','tiny')}<span class="block-label">from</span>${field('from','1','tiny')}<span class="block-label">to</span>${field('to','10','tiny')}${remove()}</div>${innerStack()}</div>`,
+  if: () => `<div class="block logic" draggable="true" data-type="if"><div class="block-head"><span class="block-label">if</span>${field('condition','score > 10','wide')}${remove()}</div>${innerStack()}</div>`
 };
-const value = (block, name, fallback) => python.valueToCode(block, name, python.ORDER_NONE) || fallback;
-python.forBlock.cobra_print = (block) => `print(${value(block, 'VALUE', "''")})\n`;
-python.forBlock.cobra_range_loop = (block) => {
-  const from = value(block, 'FROM', '0');
-  const to = value(block, 'TO', '10');
-  const body = python.statementToCode(block, 'DO') || '  pass\n';
-  return `for ${safeName(block.getFieldValue('VAR'))} in range(${from}, (${to}) + 1):\n${body}`;
-};
-python.forBlock.cobra_assign = (block) => `${safeName(block.getFieldValue('NAME'))} = ${value(block, 'VALUE', '0')}\n`;
-python.forBlock.cobra_input = (block) => [`input(${JSON.stringify(block.getFieldValue('PROMPT') || '')})`, python.ORDER_FUNCTION_CALL];
-python.forBlock.cobra_comment = (block) => `# ${block.getFieldValue('TEXT') || ''}\n`;
-
-const toolbox = {
-  kind: 'categoryToolbox', contents: [
-    { kind: 'CATEGORY', name: 'Start here', colour: '#4b8fe2', contents: [
-      { kind: 'BLOCK', type: 'cobra_print', inputs: { VALUE: { shadow: { type: 'text', fields: { TEXT: 'Hello, Cobra!' } } } } },
-      { kind: 'BLOCK', type: 'cobra_range_loop', inputs: { FROM: { shadow: { type: 'math_number', fields: { NUM: 1 } } }, TO: { shadow: { type: 'math_number', fields: { NUM: 10 } } } } },
-      { kind: 'BLOCK', type: 'cobra_assign', inputs: { VALUE: { shadow: { type: 'math_number', fields: { NUM: 0 } } } } }
-    ] },
-    { kind: 'CATEGORY', name: 'Actions', colour: '#14a67a', contents: [
-      { kind: 'BLOCK', type: 'cobra_print' }, { kind: 'BLOCK', type: 'cobra_comment' }, { kind: 'BLOCK', type: 'controls_if' }, { kind: 'BLOCK', type: 'controls_repeat_ext' }
-    ] },
-    { kind: 'CATEGORY', name: 'Loops', colour: '#5b65d6', contents: [
-      { kind: 'BLOCK', type: 'cobra_range_loop' }, { kind: 'BLOCK', type: 'controls_whileUntil' }, { kind: 'BLOCK', type: 'controls_for' }
-    ] },
-    { kind: 'CATEGORY', name: 'Variables', colour: '#b85cc7', custom: 'VARIABLE' },
-    { kind: 'CATEGORY', name: 'Values', colour: '#e39a2d', contents: [
-      { kind: 'BLOCK', type: 'math_number' }, { kind: 'BLOCK', type: 'text' }, { kind: 'BLOCK', type: 'cobra_input' }, { kind: 'BLOCK', type: 'math_arithmetic' }, { kind: 'BLOCK', type: 'logic_compare' }, { kind: 'BLOCK', type: 'logic_boolean' }
-    ] }
-  ]
-};
-
-const workspace = Blockly.inject('blocklyDiv', { toolbox, renderer: 'zelos', trashcan: true, scrollbars: true, grid: { spacing: 20, length: 3, colour: '#d9dee5', snap: false }, zoom: { controls: true, wheel: true, startScale: 1, maxScale: 1.6, minScale: .65, scaleSpeed: 1.15 }, move: { scrollbars: true, drag: true, wheel: true } });
-
-function generateCode() {
-  const generated = python.workspaceToCode(workspace).trimEnd();
-  codeEl.textContent = generated || '# Drag blocks here to generate Python.';
-  localStorage.setItem('cobra-workspace', JSON.stringify(Blockly.serialization.workspaces.save(workspace)));
-  return generated;
+function makeBlock(type) { const wrap = document.createElement('div'); wrap.innerHTML = templates[type](); return wrap.firstElementChild; }
+function id(name) { const result = String(name || 'value').trim().replace(/\W/g, '_').replace(/^\d/, '_'); return result || 'value'; }
+function pyString(text) { return JSON.stringify(String(text || '')); }
+function val(block, name) { return block.querySelector(`[data-field="${name}"]`).value; }
+function makeEmptyMessages() { document.querySelectorAll('.stack').forEach((stack) => { const hasBlocks = [...stack.children].some((child) => child.classList.contains('block')); const existing = stack.querySelector(':scope > .empty-message'); if (!hasBlocks && !existing) { const hint = document.createElement('p'); hint.className = 'empty-message'; hint.textContent = stack.classList.contains('root-stack') ? 'Drop blocks here' : 'Drop actions here'; stack.append(hint); } if (hasBlocks && existing) existing.remove(); }); }
+function codeFrom(stack, indent = '') { return [...stack.children].filter((child) => child.classList.contains('block')).map((block) => { const type = block.dataset.type; if (type === 'print') return `${indent}print(${pyString(val(block,'text'))})\n`; if (type === 'ask') return `${indent}${id(val(block,'name'))} = input(${pyString(val(block,'prompt'))})\n`; if (type === 'comment') return `${indent}# ${val(block,'text')}\n`; if (type === 'set') return `${indent}${id(val(block,'name'))} = ${val(block,'value') || '0'}\n`; if (type === 'change') return `${indent}${id(val(block,'name'))} += ${val(block,'value') || '1'}\n`; const nested = block.querySelector(':scope > .nested-wrap > .stack'); const body = codeFrom(nested, `${indent}    `) || `${indent}    pass\n`; if (type === 'count') return `${indent}for ${id(val(block,'name'))} in range(${val(block,'from') || '0'}, (${val(block,'to') || '0'}) + 1):\n${body}`; if (type === 'if') return `${indent}if ${val(block,'condition') || 'False'}:\n${body}`; return ''; }).join(''); }
+function update() { makeEmptyMessages(); const code = codeFrom(document.querySelector('.root-stack')).trimEnd(); codeEl.textContent = code || '# Drag blocks here to generate Python.'; localStorage.setItem('cobra-simple-workspace', document.querySelector('.root-stack').innerHTML); return code; }
+function attachEvents() {
+  document.querySelectorAll('[draggable="true"]').forEach((item) => { if (item.dataset.bound) return; item.dataset.bound = 'true'; item.addEventListener('dragstart', (event) => { dragged = item; event.dataTransfer.effectAllowed = 'move'; event.dataTransfer.setData('text/plain', item.dataset.new || item.dataset.type); if (item.classList.contains('block')) requestAnimationFrame(() => item.classList.add('dragging')); }); item.addEventListener('dragend', () => { item.classList.remove('dragging'); dragged = null; document.querySelectorAll('.drag-over').forEach((el) => el.classList.remove('drag-over')); }); });
+  document.querySelectorAll('.delete-block').forEach((button) => { if (button.dataset.bound) return; button.dataset.bound = 'true'; button.addEventListener('click', (event) => { event.stopPropagation(); button.closest('.block').remove(); update(); }); });
+  document.querySelectorAll('.field').forEach((input) => { if (input.dataset.bound) return; input.dataset.bound = 'true'; input.addEventListener('input', update); });
 }
-function restoreWorkspace() {
-  try {
-    const saved = localStorage.getItem('cobra-workspace');
-    if (saved) Blockly.serialization.workspaces.load(JSON.parse(saved), workspace);
-  } catch (_) { localStorage.removeItem('cobra-workspace'); }
-}
-workspace.addChangeListener((event) => { if (!event.isUiEvent) generateCode(); });
-restoreWorkspace();
-generateCode();
-window.addEventListener('resize', () => Blockly.svgResize(workspace));
-
-document.getElementById('exportButton').addEventListener('click', () => {
-  const blob = new Blob([generateCode() || '# Cobra program\n'], { type: 'text/x-python' });
-  const link = Object.assign(document.createElement('a'), { href: URL.createObjectURL(blob), download: 'cobra_program.py' });
-  link.click(); URL.revokeObjectURL(link.href);
-});
-document.getElementById('clearButton').addEventListener('click', () => { workspace.clear(); outputEl.textContent = 'Workspace cleared.'; });
+canvas.addEventListener('dragover', (event) => { const stack = event.target.closest('.stack'); if (!stack) return; event.preventDefault(); stack.classList.add('drag-over'); });
+canvas.addEventListener('dragleave', (event) => { const stack = event.target.closest('.stack'); if (stack && !stack.contains(event.relatedTarget)) stack.classList.remove('drag-over'); });
+canvas.addEventListener('drop', (event) => { const stack = event.target.closest('.stack'); if (!stack || !dragged || (dragged.classList.contains('block') && dragged.contains(stack))) return; event.preventDefault(); stack.classList.remove('drag-over'); const block = dragged.dataset.new ? makeBlock(dragged.dataset.new) : dragged; stack.append(block); attachEvents(); update(); });
+try { const saved = localStorage.getItem('cobra-simple-workspace'); if (saved) document.querySelector('.root-stack').innerHTML = saved; } catch (_) { /* Storage is optional. */ }
+attachEvents(); update();
+document.getElementById('clearButton').addEventListener('click', () => { document.querySelector('.root-stack').innerHTML = ''; attachEvents(); outputEl.textContent = 'Workspace cleared.'; update(); });
 document.getElementById('clearOutput').addEventListener('click', () => { outputEl.textContent = ''; });
-
+document.getElementById('exportButton').addEventListener('click', () => { const blob = new Blob([update() || '# Cobra program\n'], { type:'text/x-python' }); const link = Object.assign(document.createElement('a'), { href:URL.createObjectURL(blob), download:'cobra_program.py' }); link.click(); URL.revokeObjectURL(link.href); });
 let pyodidePromise;
-async function getPyodide() {
-  if (!pyodidePromise) {
-    pyodidePromise = new Promise((resolve, reject) => {
-      const script = document.createElement('script'); script.src = 'https://cdn.jsdelivr.net/pyodide/v0.26.2/full/pyodide.js';
-      script.onload = () => loadPyodide({ stdout: (text) => { outputEl.textContent += `${text}\n`; }, stderr: (text) => { outputEl.textContent += `Error: ${text}\n`; } }).then(resolve, reject);
-      script.onerror = () => reject(new Error('Python runner could not be downloaded. Check your internet connection.'));
-      document.head.append(script);
-    });
-  }
-  return pyodidePromise;
-}
-document.getElementById('runButton').addEventListener('click', async () => {
-  const code = generateCode();
-  if (!code) { outputEl.textContent = 'Add a block before running.'; return; }
-  outputEl.textContent = 'Starting Python...\n';
-  const button = document.getElementById('runButton'); button.disabled = true;
-  try { const runtime = await getPyodide(); outputEl.textContent = ''; await runtime.runPythonAsync(code); if (!outputEl.textContent) outputEl.textContent = 'Finished with no output.'; }
-  catch (error) { outputEl.textContent += `\n${error.message}`; }
-  finally { button.disabled = false; }
-});
+async function runtime() { if (!pyodidePromise) pyodidePromise = new Promise((resolve,reject) => { const script = document.createElement('script'); script.src='https://cdn.jsdelivr.net/pyodide/v0.26.2/full/pyodide.js'; script.onload=() => loadPyodide({ stdout:(line) => outputEl.textContent += `${line}\n`, stderr:(line) => outputEl.textContent += `Error: ${line}\n` }).then(resolve,reject); script.onerror=() => reject(new Error('Python runner could not be downloaded. Check your internet connection.')); document.head.append(script); }); return pyodidePromise; }
+document.getElementById('runButton').addEventListener('click', async () => { const code = update(); if (!code) { outputEl.textContent = 'Add a block before running.'; return; } outputEl.textContent='Starting Python...\n'; const button=document.getElementById('runButton'); button.disabled=true; try { const py=await runtime(); outputEl.textContent=''; await py.runPythonAsync(code); if (!outputEl.textContent) outputEl.textContent='Finished with no output.'; } catch (error) { outputEl.textContent += `\n${error.message}`; } finally { button.disabled=false; } });
