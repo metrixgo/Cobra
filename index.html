@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Cobra — Block Python</title>
+    <link rel="preconnect" href="https://unpkg.com" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="brand"><span class="brand-mark">C</span><span>Cobra</span><small>Block Python</small></div>
+      <div class="actions">
+        <button id="runButton" class="button button-primary">Run</button>
+        <button id="exportButton" class="button">Export .py</button>
+        <button id="clearButton" class="button button-quiet">Clear</button>
+      </div>
+    </header>
+
+    <main class="app-shell">
+      <section class="editor-panel" aria-label="Block editor">
+        <div class="panel-heading"><span>Blocks</span><span class="hint">Drag blocks together to build a program</span></div>
+        <div id="blocklyDiv"></div>
+      </section>
+      <aside class="code-panel" aria-label="Generated Python">
+        <div class="panel-heading"><span>Python</span><span id="codeState" class="status">Live</span></div>
+        <pre id="pythonCode" aria-live="polite"></pre>
+        <section class="output-panel" aria-label="Program output">
+          <div class="output-heading">Output <button id="clearOutput" aria-label="Clear output">Clear</button></div>
+          <pre id="programOutput">Run your blocks to see output here.</pre>
+        </section>
+      </aside>
+    </main>
+
+    <script src="https://unpkg.com/blockly@11.1.1/blockly_compressed.js"></script>
+    <script src="https://unpkg.com/blockly@11.1.1/msg/en.js"></script>
+    <script src="https://unpkg.com/blockly@11.1.1/blocks_compressed.js"></script>
+    <script src="https://unpkg.com/blockly@11.1.1/python_compressed.js"></script>
+    <script src="app.js"></script>
+  </body>
+</html>
