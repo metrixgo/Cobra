@@ -23,18 +23,13 @@ Cobra is a static website. Firebase Hosting publishes the site, and Cloud Firest
 1. Create a project in the [Firebase Console](https://console.firebase.google.com/).
 2. In **Build**, create a **Firestore Database**. The default location is fine for this project.
 3. In **Project settings**, add a Web app. Firebase will show a configuration object for the app.
-4. Paste that object into `firebase-config.js`. It should look like this:
+4. Copy `firebase-config.js.template` to `firebase-config.js`, then replace the placeholder values with your Firebase config:
 
-   ```js
-   window.COBRA_FIREBASE_CONFIG = {
-     apiKey: "...",
-     authDomain: "your-project.firebaseapp.com",
-     projectId: "your-project-id",
-     storageBucket: "your-project.appspot.com",
-     messagingSenderId: "...",
-     appId: "..."
-   };
+   ```powershell
+   copy firebase-config.js.template firebase-config.js
    ```
+
+   `firebase-config.js` is gitignored so your API key is not pushed to GitHub. Only the template is committed.
 
 5. Open **Build → Firestore Database → Rules** in Firebase. Replace the rules with the contents of `firestore.rules`, then click **Publish**.
 
