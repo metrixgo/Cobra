@@ -14,7 +14,7 @@ const templates = {
   print_variable: () => `<div class="block print" draggable="true" data-type="print_variable"><div class="block-head"><span class="block-label">print variable</span>${field('name', 'answer')}${remove()}</div></div>`,
   ask: () => `<div class="block ask" draggable="true" data-type="ask"><div class="block-head"><span class="block-label">ask</span>${field('prompt', 'Your question?', 'wide')}<span class="block-label">and store answer in</span>${field('name', 'answer')}${remove()}</div></div>`,
   comment: () => `<div class="block other" draggable="true" data-type="comment"><div class="block-head"><span class="block-label">comment</span>${field('text', 'explain this step', 'wide')}${remove()}</div></div>`,
-  set: () => `<div class="block variable" draggable="true" data-type="set"><div class="block-head"><span class="block-label">set</span>${field('name', 'store')}<span class="block-label">to</span>${field('value', '0')}${remove()}</div></div>`,
+  set: () => `<div class="block variable" draggable="true" data-type="set"><div class="block-head"><span class="block-label">set</span>${field('name', 'score')}<span class="block-label">to</span>${field('value', '0')}${remove()}</div></div>`,
   change: () => `<div class="block variable" draggable="true" data-type="change"><div class="block-head"><span class="block-label">change</span>${field('name', 'score')}<span class="block-label">by</span>${field('value', '1', 'tiny')}${remove()}</div></div>`,
   count: () => `<div class="block loop" draggable="true" data-type="count"><div class="block-head"><span class="block-label">count</span>${field('name', 'i', 'tiny')}<span class="block-label">from</span>${field('from', '1', 'tiny')}<span class="block-label">to</span>${field('to', '10', 'tiny')}${remove()}</div>${nested('DO')}</div>`,
   if: () => `<div class="block logic" draggable="true" data-type="if"><div class="block-head"><span class="block-label">if</span>${field('condition', 'score > 10', 'wide')}${remove()}</div>${nested('DO')}</div>`,
@@ -23,16 +23,30 @@ const templates = {
 function makeBlock(type) { const holder = document.createElement('div'); holder.innerHTML = templates[type](); return holder.firstElementChild; }
 function id(name) { const clean = String(name || 'value').trim().replace(/\W/g, '_').replace(/^\d/, '_'); return clean || 'value'; }
 function pyString(text) { return JSON.stringify(String(text || '')); }
-function val(block, name) { return block.querySelector(`[data-field="${name}"]`).value; }
+function val(block, name) { const el = block.querySelector(`[data-field="${name}"]`); return el ? el.value : ''; }
+function fieldValue(input) {
+  return input ? (input.value ?? input.getAttribute('value') ?? '') : '';
+}
+function syncFieldAttributes(container = rootStack) {
+  if (!container) return;
+  container.querySelectorAll('.field').forEach((input) => {
+    input.setAttribute('value', input.value);
+  });
+}
 function workspaceMarkup() {
-  const workspace = rootStack.cloneNode(true);
-  workspace.querySelectorAll('.field').forEach((input) => input.setAttribute('value', input.value));
-  return workspace.innerHTML;
+  syncFieldAttributes(rootStack);
+  return rootStack.innerHTML;
+}
+function applyFieldValues(container) {
+  container.querySelectorAll('.field').forEach((input) => {
+    const saved = input.getAttribute('value');
+    if (saved !== null) input.value = saved;
+  });
 }
 function makeEmptyMessages() { document.querySelectorAll('.stack').forEach((stack) => { const hasBlocks = [...stack.children].some((item) => item.classList.contains('block')); const message = stack.querySelector(':scope > .empty-message'); if (!hasBlocks && !message) { const hint = document.createElement('p'); hint.className = 'empty-message'; hint.textContent = stack.classList.contains('root-stack') ? 'Drop blocks here' : 'Drop actions here'; stack.append(hint); } if (hasBlocks && message) message.remove(); }); }
 function codeFrom(stack, indent = '') { return [...stack.children].filter((item) => item.classList.contains('block')).map((block) => { const type = block.dataset.type; if (type === 'print_text') return `${indent}print(${pyString(val(block, 'text'))})\n`; if (type === 'print_variable') return `${indent}print(${id(val(block, 'name'))})\n`; if (type === 'ask') return `${indent}${id(val(block, 'name'))} = input(${pyString(val(block, 'prompt'))})\n`; if (type === 'comment') return `${indent}# ${val(block, 'text')}\n`; if (type === 'set') return `${indent}${id(val(block, 'name'))} = ${val(block, 'value') || '0'}\n`; if (type === 'change') return `${indent}${id(val(block, 'name'))} += ${val(block, 'value') || '1'}\n`; if (type === 'count') { const body = codeFrom(block.querySelector('.nested-stack'), `${indent}    `) || `${indent}    pass\n`; return `${indent}for ${id(val(block, 'name'))} in range(${val(block, 'from') || '0'}, (${val(block, 'to') || '0'}) + 1):\n${body}`; } if (type === 'if') { const body = codeFrom(block.querySelector('.nested-stack'), `${indent}    `) || `${indent}    pass\n`; return `${indent}if ${val(block, 'condition') || 'False'}:\n${body}`; } if (type === 'if_else') { const thenBody = codeFrom(block.querySelector('[data-branch="then"]'), `${indent}    `) || `${indent}    pass\n`; const elseBody = codeFrom(block.querySelector('[data-branch="else"]'), `${indent}    `) || `${indent}    pass\n`; return `${indent}if ${val(block, 'condition') || 'False'}:\n${thenBody}${indent}else:\n${elseBody}`; } return ''; }).join(''); }
 function update() { makeEmptyMessages(); const code = codeFrom(document.querySelector('.root-stack')).trimEnd(); codeEl.textContent = code || '# Drag blocks here to generate Python.'; const workspace = workspaceMarkup(); localStorage.setItem('cobra-simple-workspace', workspace); if (!applyingRemoteWorkspace) window.cobraCollaboration?.save(workspace); return code; }
-function attachEvents() { document.querySelectorAll('[draggable="true"], .delete-block, .field').forEach((item) => { if (eventBound.has(item)) return; eventBound.add(item); if (item.matches('[draggable="true"]')) { item.addEventListener('dragstart', (event) => { event.stopPropagation(); dragged = item; event.dataTransfer.effectAllowed = 'move'; event.dataTransfer.setData('text/plain', item.dataset.new || item.dataset.type); if (item.classList.contains('block')) requestAnimationFrame(() => item.classList.add('dragging')); }); item.addEventListener('dragend', (event) => { event.stopPropagation(); item.classList.remove('dragging'); dragged = null; document.querySelectorAll('.drag-over').forEach((element) => element.classList.remove('drag-over')); }); } else if (item.matches('.delete-block')) { item.addEventListener('click', (event) => { event.stopPropagation(); item.closest('.block').remove(); update(); }); } else item.addEventListener('input', update); }); }
+function attachEvents() { document.querySelectorAll('[draggable="true"], .delete-block, .field').forEach((item) => { if (eventBound.has(item)) return; eventBound.add(item); if (item.matches('[draggable="true"]')) { item.addEventListener('dragstart', (event) => { event.stopPropagation(); dragged = item; event.dataTransfer.effectAllowed = 'move'; event.dataTransfer.setData('text/plain', item.dataset.new || item.dataset.type); if (item.classList.contains('block')) requestAnimationFrame(() => item.classList.add('dragging')); }); item.addEventListener('dragend', (event) => { event.stopPropagation(); item.classList.remove('dragging'); dragged = null; document.querySelectorAll('.drag-over').forEach((element) => element.classList.remove('drag-over')); }); } else if (item.matches('.delete-block')) { item.addEventListener('click', (event) => { event.stopPropagation(); item.closest('.block').remove(); update(); }); } else { item.addEventListener('input', update); item.addEventListener('change', update); } }); }
 const rootStack = document.querySelector('.root-stack');
 function dropStackFor(target) {
   return target instanceof Element ? target.closest('.nested-stack') || rootStack : rootStack;
@@ -66,15 +80,17 @@ canvas.addEventListener('drop', (event) => {
   attachEvents();
   update();
 });
-function upgradeSavedBlocks() { const changed = { print: 'print_text' }; document.querySelectorAll('.block').forEach((oldBlock) => { const type = changed[oldBlock.dataset.type] || oldBlock.dataset.type; if (!templates[type]) { oldBlock.remove(); return; } const values = Object.fromEntries([...oldBlock.querySelectorAll(':scope > .block-head .field')].map((input) => [input.dataset.field, input.value])); const oldStacks = [...oldBlock.querySelectorAll(':scope > .nested-wrap > .stack')]; const fresh = makeBlock(type); fresh.querySelectorAll(':scope > .block-head .field').forEach((input) => { if (values[input.dataset.field] !== undefined) input.value = values[input.dataset.field]; }); fresh.querySelectorAll(':scope > .nested-wrap > .stack').forEach((stack, index) => { if (!oldStacks[index]) return; [...oldStacks[index].children].forEach((child) => stack.append(child)); }); oldBlock.replaceWith(fresh); }); document.querySelectorAll('.variable-chip, [data-type="use"]').forEach((item) => item.remove()); document.querySelectorAll('[data-bound]').forEach((item) => item.removeAttribute('data-bound')); }
-try { const saved = localStorage.getItem('cobra-simple-workspace'); if (saved) document.querySelector('.root-stack').innerHTML = saved; } catch (_) { /* Storage is optional. */ }
+function upgradeSavedBlocks() { const changed = { print: 'print_text' }; document.querySelectorAll('.block').forEach((oldBlock) => { const targetType = changed[oldBlock.dataset.type]; if (targetType) { if (!templates[targetType]) { oldBlock.remove(); return; } const values = Object.fromEntries([...oldBlock.querySelectorAll(':scope > .block-head .field')].map((input) => [input.dataset.field, fieldValue(input)])); const oldStacks = [...oldBlock.querySelectorAll(':scope > .nested-wrap > .stack')]; const fresh = makeBlock(targetType); fresh.querySelectorAll(':scope > .block-head .field').forEach((input) => { if (values[input.dataset.field] !== undefined) { input.value = values[input.dataset.field]; input.setAttribute('value', values[input.dataset.field]); } }); fresh.querySelectorAll(':scope > .nested-wrap > .stack').forEach((stack, index) => { if (!oldStacks[index]) return; [...oldStacks[index].children].forEach((child) => stack.append(child)); }); oldBlock.replaceWith(fresh); } }); document.querySelectorAll('.variable-chip, [data-type="use"]').forEach((item) => item.remove()); document.querySelectorAll('[data-bound]').forEach((item) => item.removeAttribute('data-bound')); syncFieldAttributes(rootStack); }
+try { const saved = localStorage.getItem('cobra-simple-workspace'); if (saved) { document.querySelector('.root-stack').innerHTML = saved; applyFieldValues(rootStack); } } catch (_) { /* Storage is optional. */ }
 upgradeSavedBlocks(); attachEvents(); update();
 window.cobraCollaboration?.start({
   getWorkspace: workspaceMarkup,
   applyWorkspace: (workspace) => {
+    makeEmptyMessages();
     if (workspace === workspaceMarkup()) return;
     applyingRemoteWorkspace = true;
     rootStack.innerHTML = workspace;
+    applyFieldValues(rootStack);
     upgradeSavedBlocks();
     attachEvents();
     update();
