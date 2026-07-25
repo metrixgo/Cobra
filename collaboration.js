@@ -48,7 +48,6 @@
     },
     shareUrl() {
       const room = activeRoom || roomId();
-      if (config?.projectId) return `https://${config.projectId}.web.app/?room=${encodeURIComponent(room)}`;
       return new URL(`?room=${encodeURIComponent(room)}`, window.location.href).href;
     }
   };

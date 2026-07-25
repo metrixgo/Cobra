@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Cobra — Block Python</title>
-    <link rel="stylesheet" href="styles.css" />
+    <link rel="stylesheet" href="styles.css?v=4" />
   </head>
   <body>
     <header class="topbar">
@@ -20,11 +20,13 @@
               <button class="category-jump actions-jump" data-target="actions">Actions</button>
               <button class="category-jump logic-jump" data-target="logic">Logic</button>
               <button class="category-jump variables-jump" data-target="variables">Variables</button>
+              <button class="category-jump operators-jump" data-target="operators">Operators</button>
               <button class="category-jump other-jump" data-target="other">Other</button>
             </nav>
-            <section id="actions" class="palette-group"><p class="palette-label">ACTIONS</p><div class="palette-block print" draggable="true" data-new="print_text">print text</div><div class="palette-block print" draggable="true" data-new="print_variable">print variable</div><div class="palette-block ask" draggable="true" data-new="ask">ask for input</div></section>
-            <section id="logic" class="palette-group"><p class="palette-label">LOGIC</p><div class="palette-block loop" draggable="true" data-new="count">count from to</div><div class="palette-block logic" draggable="true" data-new="if">if condition</div><div class="palette-block logic" draggable="true" data-new="if_else">if else</div></section>
-            <section id="variables" class="palette-group"><p class="palette-label">VARIABLES</p><div class="palette-block variable" draggable="true" data-new="set">set variable</div><div class="palette-block variable" draggable="true" data-new="change">change variable</div></section>
+            <section id="actions" class="palette-group"><p class="palette-label">ACTIONS</p><div class="palette-block print" draggable="true" data-new="print">print</div><div class="palette-block ask" draggable="true" data-new="ask">ask for input</div></section>
+            <section id="logic" class="palette-group"><p class="palette-label">LOGIC</p><div class="palette-block loop" draggable="true" data-new="count">count from to</div><div class="palette-block logic" draggable="true" data-new="if">if condition</div><div class="palette-block logic" draggable="true" data-new="if_else">if else</div><div class="palette-block loop" draggable="true" data-new="while">while condition</div></section>
+            <section id="variables" class="palette-group"><p class="palette-label">VARIABLES</p><div class="palette-block variable" draggable="true" data-new="set">set variable</div><div class="palette-block variable" draggable="true" data-new="change">change variable</div><div class="palette-block variable reporter" draggable="true" data-new="var_get">variable score</div></section>
+            <section id="operators" class="palette-group"><p class="palette-label">OPERATORS</p><div class="palette-block operator reporter" draggable="true" data-new="add">a + b</div><div class="palette-block operator reporter" draggable="true" data-new="subtract">a - b</div><div class="palette-block operator reporter" draggable="true" data-new="multiply">a * b</div><div class="palette-block operator reporter" draggable="true" data-new="divide">a / b</div><div class="palette-block operator reporter" draggable="true" data-new="equals">a == b</div><div class="palette-block operator reporter" draggable="true" data-new="greater">a &gt; b</div><div class="palette-block operator reporter" draggable="true" data-new="less">a &lt; b</div><div class="palette-block operator reporter" draggable="true" data-new="and">a and b</div><div class="palette-block operator reporter" draggable="true" data-new="or">a or b</div><div class="palette-block operator reporter" draggable="true" data-new="join">join text</div><div class="palette-block operator reporter" draggable="true" data-new="length">length of</div><div class="palette-block operator reporter" draggable="true" data-new="random">pick random</div></section>
             <section id="other" class="palette-group"><p class="palette-label">OTHER</p><div class="palette-block other" draggable="true" data-new="comment">comment</div></section>
           </aside>
           <div id="canvas" class="canvas" aria-label="Program canvas"><div class="stack root-stack" data-stack="root"></div></div>
@@ -39,7 +41,7 @@
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
     <script src="firebase-config.js"></script>
-    <script src="collaboration.js"></script>
-    <script src="app.js"></script>
+    <script src="collaboration.js?v=4"></script>
+    <script src="app.js?v=5"></script>
   </body>
 </html>
