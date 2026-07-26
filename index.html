@@ -9,7 +9,7 @@
   <body>
     <header class="topbar">
       <div class="brand"><span class="brand-mark">C</span><span>Cobra</span><small>Block Python</small></div>
-      <div class="actions"><span id="collaborationStatus" class="collaboration-status">Private workspace</span><button id="copyLinkButton" class="button" title="Copy a link to this shared workspace">Copy share link</button><button id="runButton" class="button primary">Run</button><button id="exportButton" class="button">Export .py</button><button id="clearButton" class="button quiet">Clear</button></div>
+      <div class="actions"><span id="collaborationStatus" class="collaboration-status">Private workspace</span><button id="aiToggleButton" class="button" title="Toggle AI Copilot Assistant">✨ AI Assistant</button><button id="copyLinkButton" class="button" title="Copy a link to this shared workspace">Copy share link</button><button id="runButton" class="button primary">Run</button><button id="exportButton" class="button">Export .py</button><button id="clearButton" class="button quiet">Clear</button></div>
     </header>
     <main class="app-shell">
       <section class="editor-panel">
@@ -37,11 +37,56 @@
         <pre id="pythonCode"></pre>
         <section class="output-panel"><div class="output-heading">Output <button id="clearOutput">Clear</button></div><pre id="programOutput">Run your blocks to see output here.</pre></section>
       </aside>
+      <aside id="aiPanel" class="ai-panel" aria-label="AI Assistant Panel">
+        <div class="ai-header">
+          <span>🤖 AI Assistant</span>
+          <div class="ai-header-actions">
+            <button id="aiApiKeyButton" class="button quiet" title="AI Settings & API Key">⚙ Settings</button>
+            <button id="closeAiPanel" class="button quiet" title="Close AI Panel">✕</button>
+          </div>
+        </div>
+        <div class="ai-quick-actions">
+          <button id="analyzeCodeButton" class="button" title="Analyze Python Code for bugs & suggestions">🔍 Analyze Code</button>
+        </div>
+        <div id="aiMessages" class="ai-messages">
+          <div class="ai-message assistant">
+            <div class="ai-avatar">🤖</div>
+            <div class="ai-message-content">Hello! I'm your Cobra AI Assistant. I can analyze your Python code, suggest block improvements, or generate block programs for you. Ask me anything!</div>
+          </div>
+        </div>
+        <div class="ai-input-wrap">
+          <input id="aiPromptInput" class="ai-prompt-input" type="text" placeholder="Ask AI or request block changes…" spellcheck="false">
+          <button id="sendAiButton" class="button primary">Send</button>
+        </div>
+      </aside>
     </main>
+
+    <!-- AI Settings Modal -->
+    <div id="aiSettingsModal" class="modal-backdrop">
+      <div class="modal-card">
+        <div class="modal-title">🔑 Gemini AI Settings</div>
+        <p style="font-size:11px; color:#6f7782; margin:0 0 10px;">Enter your Google Gemini API Key below, or configure it in <code>ai-config.js</code>. Key is saved locally in your browser.</p>
+        <label style="font-size:11px; font-weight:bold; color:#3c4249;">API Key:</label>
+        <input id="modalApiKeyInput" class="modal-field" type="password" placeholder="AIzaSy..." spellcheck="false" />
+        <label style="font-size:11px; font-weight:bold; color:#3c4249;">Model:</label>
+        <select id="modalModelSelect" class="modal-field">
+          <option value="gemini-1.5-flash">gemini-1.5-flash (Recommended Free Tier)</option>
+          <option value="gemini-2.0-flash">gemini-2.0-flash</option>
+          <option value="gemini-1.5-pro">gemini-1.5-pro</option>
+        </select>
+        <div class="modal-actions">
+          <button id="closeSettingsModal" class="button quiet">Cancel</button>
+          <button id="saveApiKeyButton" class="button primary">Save Key</button>
+        </div>
+      </div>
+    </div>
+
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
     <script src="firebase-config.js"></script>
     <script src="collaboration.js?v=4"></script>
     <script src="app.js?v=5"></script>
+    <script src="ai-config.js"></script>
+    <script src="ai-assistant.js"></script>
   </body>
 </html>
