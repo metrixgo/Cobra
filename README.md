@@ -1,113 +1,38 @@
-# Cobra — Collaborative Block Python IDE with AI Assistant
+# Cobra
 
-Cobra is a browser-native, collaborative block-based visual programming environment, Python code generator, and AI assistant inspired by Scratch, Snap!, and Visual Studio Code. Users can assemble statement and expression blocks, nest math/string/logic operators, write Python interactively, get short AI code advice, collaborate in real time with remote users, and run Python directly in the browser via WebAssembly.
-
----
-
-## Key Concepts & Features
-
-### 1. Visual Block Paradigm & Scratch/Snap! Nesting
-Cobra divides programming constructs into two distinct block types:
-- **Statement Blocks**: Vertical blocks (Actions, Logic, Variables) that snap sequentially into stacks (`.stack`). They manage program flow such as loops (`count`, `while`), conditionals (`if`, `if_else`), variable assignments (`set`, `change`), and actions (`print`, `ask`).
-- **Reporter / Expression Blocks**: Rounded pill blocks (Operators & Variable values) that plug directly into **Input Slots** (`.input-slot`).
-- **Input Slots (`.input-slot`)**: Dual-mode input containers present on statement and operator blocks. An input slot functions as an editable text/number input by default, or accepts nested reporter blocks (e.g. `add`, `subtract`, `multiply`, `divide`, `equals`, `greater`, `join`, `pick random`, `variable score`). Reporter blocks can be nested to arbitrary depths (e.g., `print (score + (level * 10))`).
-
-### 2. Lightweight AI Assistant (Gemini API Integration)
-- **✨ AI Assistant Sidebar**: Built-in AI panel providing short, 1-3 sentence answers for code review, bug detection, and Python advice.
-- **🔍 Analyze Code**: One-click analysis scanning your generated Python code for bugs and logic issues.
-- **⚡ Fast & Resource-Efficient**: Configured with token limits for minimal resource consumption and fast responses.
-- **🔒 Key Security**: The Gemini API key is stored locally in `ai-config.js` or browser `localStorage` and is gitignored to ensure keys are **never committed**.
-
-### 3. Smart Unified `print` Block
-Replaces rigid `print_text` and `print_variable` blocks with a single smart `print [slot]` block. The code generator intelligently analyzes the slot content:
-- Formats plain text as Python string literals (`print("Hello World")`).
-- Passes variable identifiers directly (`print(score)`).
-- Formats nested operator expressions (`print((a + b))`).
-
-### 4. DOM State & HTML Attribute Synchronization
-To maintain 1-to-1 fidelity across local storage, page refreshes, and multi-user collaboration:
-- Live DOM input `.value` properties are continuously synchronized to HTML `value="..."` attributes via `syncFieldAttributes()`.
-- Serialized workspace HTML (`workspaceMarkup()`) captures the exact state of all fields and nested reporter structures.
-- Workspace upgrades (`upgradeSavedBlocks()`) handle backward-compatible schema migrations without tearing down valid blocks or resetting field values.
+A Python visualizer & collaborator.
 
 ---
 
-## Configuring Your Gemini API Key
+## Inspiration
+When I was learning Python, I often get overwhelmed by the texts. At that time, I was really good at Scratch, which is a block-based language. I’m wondering, what if we use blocks to represent the python language, then it would be very easy for beginners to learn Python. Therefore, I created this Python visualizer, Cobra.
 
-You can supply your Gemini API key in **one of two secure ways**:
+## What it does
+Cobra is a Python compiler, which acts as a block coding language. But unlike other block coding language, Cobra allows you to translate the blocks into the universal Python code instead of complex javascript source code, which allows you to export your project so somewhere else.
 
-### Option A: Local Config File (`ai-config.js`)
-1. Copy `ai-config.js.template` to `ai-config.js`:
-   ```bash
-   cp ai-config.js.template ai-config.js
-   ```
-2. Open `ai-config.js` and set your API key:
-   ```javascript
-   window.COBRA_AI_CONFIG = {
-       apiKey: "YOUR_ACTUAL_GEMINI_API_KEY",
-       model: "gemini-1.5-flash"
-   };
-   ```
-3. `ai-config.js` is automatically added to `.gitignore` so your API key stays safe on your computer and is **never committed** to Git.
+## How we built it
+I first started to build using Blockly, which is a premade block coding template. However, I quickly realized that this template implemented too many features already and I cannot customize it to convert into Python. So I decided to make the block coding from scratch using html and java script. At first there were only 3 blocks with limited features, but after testing I eventually expanded it to 4 categories of blocks and support for insertion, collaboration, and AI. The vinal version utilizes HTML, Javascript, CSS3, Pyodide for Python execution and Firebase for hosting & live share.
 
-### Option B: In-App UI Settings Modal ⚙
-1. Open Cobra in your browser.
-2. Click **✨ AI Assistant** in the top bar.
-3. Click the **⚙ Settings** button in the AI header.
-4. Paste your Gemini API key and click **Save Key**. The key is saved locally in your browser's `localStorage`.
+## Challenges we ran into
+There was lot of times where the hosting runs into errors and updates could not be shared between users. So I spent some time going over the documents of firebase and recognized that I would need to first deploy a database and deploy from the root directory to let the files be deployed to web. Additionally when first developing the AI assistant the AI could not have access to the database storing the code, which took me a long time to fix, and eventually I found it's because the AI only has reference to the block code which is in html that the AI couldn't understand.
 
----
+## Accomplishments that we're proud of
+Actually made a block coding website from scratch.
 
-## Technologies Used
+Successfully deployed the website and the first time using firebase.
 
-### Frontend Core
-- **HTML5 & Semantic Structure**: Pure HTML5 layout with accessible palette groups, category jump navigation, program canvas, Python code viewer, output terminal panel, and AI Assistant Copilot sidebar.
-- **Vanilla CSS3 (Design Token Architecture)**:
-  - Custom Properties (`--blue`, `--cyan`, `--orange`, `--green`, `--gray`).
-  - Flexbox and Grid layouts.
-  - Custom dashed drop targets (`.stack`, `.input-slot`, `.slot-drag-over`) and rounded reporter pills (`.block.reporter`).
-- **Vanilla JavaScript (ES6+)**:
-  - Zero external npm frameworks/build tools required for the UI.
-  - HTML5 Drag-and-Drop API (`dragstart`, `dragover`, `dragleave`, `drop`, `dragend`).
-  - Event binding tracking using JavaScript `WeakSet` (`eventBound`).
+Fixed almost all bugs and created a clean interface for users.
 
-### Python Execution Engine (Pyodide & WebAssembly)
-- **Pyodide (v0.26.2)**: CPython compiled to WebAssembly (WASM), running natively inside the browser thread. Loaded dynamically from CDN when the user clicks **Run**.
-- **Pyodide JS Bridge (`js` module & `builtins.input` override)**:
-  - Custom JS bridge (`window.cobraAskInput`) intercepting standard Python `input()` calls at runtime.
-- **Smart Auto-Type Converter**:
-  - Automatically parses input strings into appropriate Python primitives (`int`, `float`, `bool`, or `str`).
+## What we learned
+Learned how to use Firebase to deploy websites.
 
-### Real-Time Collaboration & Backend (Firebase)
-- **Firebase JS SDK (v10.12.2 Compatibility Build)**:
-  - `firebase-app-compat.js` (App initialization).
-  - `firebase-firestore-compat.js` (Firestore Database).
-- **Cloud Firestore**:
-  - Real-time document store (`cobraRooms/{roomId}`).
-- **Firebase Hosting**:
-  - Distributed Web CDN with `Cache-Control: no-cache, no-store, must-revalidate` headers configured in `firebase.json`.
+Learned how to use Pyodide.
 
----
+Learned how to make block coding out of html.
 
-## File Structure
+## What's next for Cobra
+Make the website more stable by hosting on a more reliable server.
 
-```text
-Cobra/
-├── index.html                  # Main application UI layout & block palette
-├── styles.css                  # UI theme, block styles, input slots & AI panel
-├── app.js                      # Block templates, drag-drop engine, code generator, Pyodide runner
-├── ai-assistant.js             # Fast Gemini AI advisor engine
-├── ai-config.js.template       # Template for local Gemini API credentials
-├── ai-config.js                # Local Gemini config file (gitignored)
-├── collaboration.js            # Firestore room manager & real-time sync
-├── firebase-config.js          # Project Firebase API credentials
-├── firebase-config.js.template # Config template for version control
-├── firebase.json               # Firebase Hosting & Firestore configuration
-├── firestore.rules             # Security rules for room collaboration
-└── README.md                   # Project documentation
-```
+Set passwords for rooms to protect private information.
 
----
-
-## How to Run Locally
-Simply open `index.html` directly in any web browser or serve it via a local static file server.
+Fix some bugs where insertion blocks might appear white if not used.
